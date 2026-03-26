@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Well Trajectory Calculator - Design and calculate directional well trajectories. Tangential, Average Angle, Minimum Curvature methods.">
+<title>Well Trajectory Calculator</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+<!-- ADSENSE PLACEHOLDER - Replace with your actual AdSense code -->
+<!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXX" crossorigin="anonymous"></script> -->
+
+<style>
+:root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
+  --bg-input: #0f172a;
+  --accent: #22d3ee;
+  --accent2: #818cf8;
+  --accent3: #34d399;
+  --accent-warn: #fbbf24;
+  --accent-danger: #f87171;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border: #334155;
+  --radius: 10px;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { font-size: 15px; }
+body {
+  font-family: var(--font);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* === HEADER === */
+.app-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.app-header h1 {
+  font-size: 1.1rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+}
+.app-header .version { font-size: 0.65rem; color: var(--text-muted); font-family: var(--mono); }
+
+/* === TAB NAV === */
+.tab-nav {
+  display: flex; background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 48px; z-index: 99;
+}
+.tab-btn {
+  flex: 1; padding: 12px 8px; text-align: center;
+  background: none; border: none; color: var(--text-muted);
+  font-family: var(--font); font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+}
+.tab-btn.active {
+  color: var(--accent); border-bottom-color: var(--accent);
+  background: rgba(34,211,238,0.05);
+}
+.tab-btn:hover { color: var(--text-primary); }
+
+/* === SECTIONS === */
+.tab-content { display: none; padding: 12px; }
+.tab-content.active { display: block; padding-bottom: 40px; }
+
+/* === FORM ELEMENTS === */
+.form-group { margin-bottom: 10px; }
+.form-label {
+  display: block; font-size: 0.72rem; font-weight: 600;
+  color: var(--text-secondary); margin-bottom: 3px;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.form-input {
+  width: 100%; padding: 10px 12px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text-primary);
+  font-family: var(--mono); font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+.form-input:focus { outline: none; border-color: var(--accent); }
+select.form-input { cursor: pointer; }
+
+.input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 14px; border: none; border-radius: var(--radius);
+  font-family: var(--font); font-size: 0.95rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #0f172a;
+}
+.btn-primary:active { transform: scale(0.97); }
+.btn-secondary {
+  background: var(--bg-input); color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.btn-sm { padding: 8px 12px; font-size: 0.78rem; width: auto; }
+
+.btn-group { display: flex; gap: 6px; margin-bottom: 12px; }
+.btn-group .btn { flex: 1; padding: 8px 4px; font-size: 0.72rem; }
+.btn-example {
+  background: var(--bg-input); color: var(--accent); border: 1px solid var(--border);
+}
+.btn-example:active, .btn-example.active {
+  background: rgba(34,211,238,0.15); border-color: var(--accent);
+}
+
+/* === CARDS === */
+.card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 12px; overflow: hidden;
+}
+.card-header {
+  padding: 10px 14px; font-size: 0.78rem; font-weight: 700;
+  color: var(--text-secondary); border-bottom: 1px solid var(--border);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  display: flex; align-items: center; gap: 6px;
+}
+.card-body { padding: 8px; }
+
+/* === FICHAS (KPI cards) === */
+.fichas-row {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 6px; margin-bottom: 12px;
+}
+.ficha {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 6px; text-align: center;
+}
+.ficha .label { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.ficha .value { font-size: 1.1rem; font-weight: 700; font-family: var(--mono); color: var(--accent); line-height: 1.3; }
+.ficha .unit { font-size: 0.6rem; color: var(--text-muted); }
+.ficha.warn .value { color: var(--accent-warn); }
+.ficha.danger .value { color: var(--accent-danger); }
+.ficha.green .value { color: var(--accent3); }
+.ficha.purple .value { color: var(--accent2); }
+
+/* === TABLE === */
+.data-table { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.data-table table {
+  width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.75rem;
+}
+.data-table th {
+  padding: 8px 10px; text-align: left; font-weight: 700;
+  color: var(--accent); border-bottom: 2px solid var(--border);
+  position: sticky; top: 0; background: var(--bg-card);
+  font-size: 0.7rem; text-transform: uppercase;
+}
+.data-table td {
+  padding: 6px 10px; border-bottom: 1px solid rgba(51,65,85,0.5);
+  white-space: nowrap;
+}
+.data-table tr:hover td { background: rgba(34,211,238,0.03); }
+
+/* === PLOT === */
+.plot-container { width: 100%; min-height: 300px; }
+.plot-container .js-plotly-plot { width: 100% !important; }
+
+/* === AD PLACEHOLDER === */
+.ad-slot {
+  background: rgba(30,41,59,0.5); border: 1px dashed var(--border);
+  border-radius: var(--radius); padding: 20px; text-align: center;
+  margin: 12px 0; min-height: 60px;
+  display: flex; align-items: center; justify-content: center;
+}
+.ad-slot span { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* === ACCORDION === */
+.accordion-btn {
+  width: 100%; padding: 10px 14px; background: var(--bg-secondary);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text-primary); font-family: var(--font);
+  font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 4px; transition: all 0.2s;
+}
+.accordion-btn:hover { border-color: var(--accent); }
+.accordion-btn .arrow { transition: transform 0.2s; font-size: 0.7rem; }
+.accordion-btn.open .arrow { transform: rotate(180deg); }
+.accordion-content {
+  max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+}
+.accordion-content.open { max-height: 2000px; }
+.accordion-inner { padding: 8px 0; }
+
+/* === EQUATIONS === */
+.eq-card { background: var(--bg-secondary); padding: 14px; border-radius: var(--radius); margin-bottom: 8px; border-left: 3px solid var(--accent); }
+.eq-card h4 { font-size: 0.85rem; color: var(--accent); margin-bottom: 6px; }
+.eq-card .eq { font-family: var(--mono); font-size: 0.78rem; color: var(--text-secondary); line-height: 1.8; }
+
+/* === TABS INSIDE CONTENT === */
+.sub-tabs { display: flex; gap: 2px; margin-bottom: 12px; background: var(--bg-input); border-radius: var(--radius); padding: 3px; }
+.sub-tab {
+  flex: 1; padding: 8px; text-align: center; border: none;
+  background: transparent; color: var(--text-muted); border-radius: 8px;
+  font-family: var(--font); font-size: 0.75rem; font-weight: 600; cursor: pointer;
+}
+.sub-tab.active { background: var(--bg-secondary); color: var(--accent); }
+
+/* === ERROR MSG === */
+.error-msg {
+  background: rgba(248,113,113,0.1); border: 1px solid var(--accent-danger);
+  border-radius: var(--radius); padding: 10px 14px; margin-bottom: 12px;
+  font-size: 0.82rem; color: var(--accent-danger);
+}
+
+/* === CSV UPLOAD === */
+.file-upload {
+  border: 2px dashed var(--border); border-radius: var(--radius);
+  padding: 20px; text-align: center; cursor: pointer;
+  transition: border-color 0.2s; margin-bottom: 12px;
+}
+.file-upload:hover { border-color: var(--accent); }
+.file-upload input { display: none; }
+.file-upload .icon { font-size: 1.5rem; margin-bottom: 4px; }
+.file-upload .text { font-size: 0.78rem; color: var(--text-muted); }
+
+/* === SECTION DIVIDER === */
+.section-divider {
+  height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 16px 0;
+}
+
+/* === ANIMATIONS === */
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.fade-in { animation: fadeIn 0.3s ease forwards; }
+
+/* === SCROLLBAR === */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* === LANDSCAPE TABLET+ === */
+@media (min-width: 768px) {
+  .input-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .fichas-row { grid-template-columns: repeat(6, 1fr); }
+  .plots-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+    <div>
+      <h1>⛽ Well Trajectory Calculator</h1>
+      <span class="version">PWA v2.0 — Rigoberto Chandomi</span>
+    </div>
+    <button id="installBtn" style="display:none;padding:6px 14px;border:1px solid var(--accent);border-radius:20px;background:rgba(34,211,238,0.1);color:var(--accent);font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer;" onclick="installPWA()">📲 Instalar</button>
+  </div>
+</header>
+
+<!-- TAB NAV -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('design',this)">🧭 Diseño</button>
+  <button class="tab-btn" onclick="switchTab('survey',this)">📐 Survey</button>
+  <button class="tab-btn" onclick="switchTab('equations',this)">📖 Ecuaciones</button>
+</nav>
+
+<!-- ============================= TAB: DISEÑO ============================= -->
+<div id="tab-design" class="tab-content active">
+
+  <!-- Well Type Selector -->
+  <div class="form-group">
+    <label class="form-label">Tipo de Pozo</label>
+    <select id="d_tipo" class="form-input" onchange="onDesignTypeChange()">
+      <option value="I">Tipo I — Build & Hold (J-type)</option>
+      <option value="II">Tipo II — S-Curve (Build-Hold-Drop)</option>
+      <option value="III">Tipo III — Horizontal</option>
+    </select>
+  </div>
+
+  <!-- Example Buttons -->
+  <div class="btn-group">
+    <button class="btn btn-example" onclick="loadDesignExample(1)">Ejemplo 1</button>
+    <button class="btn btn-example" onclick="loadDesignExample(2)">Ejemplo 2</button>
+    <button class="btn btn-example" onclick="loadDesignExample(3)">Ejemplo 3</button>
+  </div>
+
+  <!-- Inputs -->
+  <div id="design-inputs">
+    <div class="input-row" id="d_inputs_common">
+      <div class="form-group">
+        <label class="form-label" id="lbl_hd">Desplaz. Horiz. (ft)</label>
+        <input type="number" inputmode="decimal" id="d_hd" class="form-input" value="3000" step="100">
+      </div>
+      <div class="form-group">
+        <label class="form-label" id="lbl_tvd">TVD Objetivo (ft)</label>
+        <input type="number" inputmode="decimal" id="d_tvd" class="form-input" value="10000" step="100">
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="form-group">
+        <label class="form-label">Azimut (°)</label>
+        <input type="number" inputmode="decimal" id="d_az" class="form-input" value="45" min="0" max="360" step="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">KOP (ft)</label>
+        <input type="number" inputmode="decimal" id="d_kop" class="form-input" value="2000" min="0" step="100">
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="form-group">
+        <label class="form-label">Build-Up Rate (°/100ft)</label>
+        <input type="number" inputmode="decimal" id="d_bur" class="form-input" value="2" min="0.5" max="15" step="0.25">
+      </div>
+      <div class="form-group" id="d_extra_spacer"></div>
+    </div>
+
+    <!-- Type II extra inputs -->
+    <div id="d_type2_inputs" style="display:none;">
+      <div class="section-divider"></div>
+      <div class="input-row">
+        <div class="form-group">
+          <label class="form-label">TVD inicio Drop (ft)</label>
+          <input type="number" inputmode="decimal" id="d_tvd_drop" class="form-input" value="11000" step="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Drop-Off Rate (°/100ft)</label>
+          <input type="number" inputmode="decimal" id="d_dor" class="form-input" value="1.5" min="0.5" max="15" step="0.25">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Inclinación Final (°)</label>
+        <input type="number" inputmode="decimal" id="d_inc_final" class="form-input" value="20" min="0" max="89" step="1">
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:12px;">
+    <button class="btn btn-primary" onclick="calculateDesign()">⚡ Calcular Trayectoria</button>
+  </div>
+
+  <!-- Error message -->
+  <div id="d_error" class="error-msg" style="display:none;margin-top:12px;"></div>
+
+  <!-- AD SLOT -->
+  <div class="ad-slot">
+    <!-- AdSense Ad Unit: Uncomment and replace SLOT_ID -->
+    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXX" data-ad-slot="SLOT_ID" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
+    <!-- <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script> -->
+    <span style="font-size:0.6rem;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">— Espacio Publicitario —</span>
+  </div>
+
+  <!-- Results -->
+  <div id="d_results" style="display:none;" class="fade-in">
+
+    <!-- KPI Fichas -->
+    <div id="d_fichas" class="fichas-row"></div>
+
+    <!-- Sub-tabs for plots/table -->
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchDesignSub('plots')">📊 Gráficas</button>
+      <button class="sub-tab" onclick="switchDesignSub('table')">📋 Tabla</button>
+    </div>
+
+    <div id="d_sub_plots">
+      <div class="card"><div class="card-header">📐 Sección Vertical (TVD vs HD)</div><div class="card-body"><div id="d_plot_tvd" class="plot-container"></div></div></div>
+      <div class="card"><div class="card-header">🗺️ Vista en Planta (X vs Y)</div><div class="card-body"><div id="d_plot_xy" class="plot-container"></div></div></div>
+      <div class="card"><div class="card-header">🌐 Vista 3D</div><div class="card-body"><div id="d_plot_3d" class="plot-container" style="min-height:380px;"></div></div></div>
+      <div class="card"><div class="card-header">⚠️ DLS vs MD</div><div class="card-body"><div id="d_plot_dls" class="plot-container"></div></div></div>
+    </div>
+
+    <div id="d_sub_table" style="display:none;">
+      <div class="card"><div class="card-header">🎯 Puntos Clave</div><div class="card-body"><div class="data-table" id="d_table_puntos"></div></div></div>
+      <div class="card">
+        <div class="card-header" style="justify-content:space-between;">
+          📋 Trayectoria Detallada
+          <button class="btn btn-sm btn-secondary" onclick="exportDesignCSV()">📥 CSV</button>
+        </div>
+        <div class="card-body"><div class="data-table" id="d_table_tray"></div></div>
+      </div>
+    </div>
+
+    <!-- AD SLOT -->
+    <div class="ad-slot">
+    <!-- AdSense Ad Unit: Uncomment and replace SLOT_ID -->
+    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXX" data-ad-slot="SLOT_ID" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
+    <!-- <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script> -->
+    <span style="font-size:0.6rem;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">— Espacio Publicitario —</span>
+  </div>
+  </div>
+</div>
+
+<!-- ============================= TAB: SURVEY ============================= -->
+<div id="tab-survey" class="tab-content">
+
+  <div class="form-group">
+    <label class="form-label">Ejemplo de Survey</label>
+    <select id="c_ejemplo" class="form-input">
+      <option value="1">Ejemplo 1 — J-type</option>
+      <option value="2">Ejemplo 2 — S-type</option>
+      <option value="3">Ejemplo 3 — Horizontal</option>
+    </select>
+  </div>
+
+  <!-- CSV Upload -->
+  <div class="file-upload" onclick="document.getElementById('c_file').click()">
+    <div class="icon">📁</div>
+    <div class="text" id="c_file_label">O carga tu archivo CSV (MD, INC, Az)</div>
+    <input type="file" id="c_file" accept=".csv" onchange="onCSVSelected(this)">
+  </div>
+
+  <div class="input-row" style="margin-bottom:12px;">
+    <div class="form-group">
+      <label class="form-label">Separador</label>
+      <select id="c_sep" class="form-input">
+        <option value=",">Coma (,)</option>
+        <option value=";">Punto y coma (;)</option>
+        <option value="tab">Tab</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:flex-end;">
+      <button class="btn btn-primary" onclick="calculateSurvey()" style="margin-bottom:10px;">⚡ Calcular</button>
+    </div>
+  </div>
+
+  <div id="c_error" class="error-msg" style="display:none;"></div>
+
+  <!-- AD SLOT -->
+  <div class="ad-slot">
+    <!-- AdSense Ad Unit: Uncomment and replace SLOT_ID -->
+    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXX" data-ad-slot="SLOT_ID" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
+    <!-- <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script> -->
+    <span style="font-size:0.6rem;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">— Espacio Publicitario —</span>
+  </div>
+
+  <div id="c_results" style="display:none;" class="fade-in">
+
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchSurveySub('plots')">📊 Gráficas</button>
+      <button class="sub-tab" onclick="switchSurveySub('tables')">📋 Tablas</button>
+    </div>
+
+    <div id="c_sub_plots">
+      <div class="card"><div class="card-header">🌐 Vista 3D — Comparación</div><div class="card-body"><div id="c_plot_3d" class="plot-container" style="min-height:380px;"></div></div></div>
+      <div class="card"><div class="card-header">📐 Sección Vertical</div><div class="card-body"><div id="c_plot_tvd" class="plot-container"></div></div></div>
+      <div class="card"><div class="card-header">🗺️ Vista en Planta</div><div class="card-body"><div id="c_plot_xy" class="plot-container"></div></div></div>
+      <div class="card"><div class="card-header">⚠️ DLS vs MD (Min. Curvatura)</div><div class="card-body"><div id="c_plot_dls" class="plot-container"></div></div></div>
+      <div class="card"><div class="card-header">📈 Inclinación vs MD</div><div class="card-body"><div id="c_plot_inc" class="plot-container"></div></div></div>
+      <div class="card"><div class="card-header">🧭 Azimut vs MD</div><div class="card-body"><div id="c_plot_az" class="plot-container"></div></div></div>
+    </div>
+
+    <div id="c_sub_tables" style="display:none;">
+      <div class="card">
+        <div class="card-header" style="justify-content:space-between;">
+          ⭐ Mínima Curvatura (estándar industria)
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-sm btn-secondary" onclick="exportSurveyCSV('mc')">CSV</button>
+            <button class="btn btn-sm btn-secondary" onclick="exportSurveyDEV()">DEV</button>
+          </div>
+        </div>
+        <div class="card-body"><div class="data-table" id="c_table_mc"></div></div>
+      </div>
+      <div class="card"><div class="card-header">📐 Ángulos Promedio</div><div class="card-body"><div class="data-table" id="c_table_avg"></div></div></div>
+      <div class="card"><div class="card-header">📏 Tangencial</div><div class="card-body"><div class="data-table" id="c_table_tan"></div></div></div>
+    </div>
+
+    <!-- AD SLOT -->
+    <div class="ad-slot">
+    <!-- AdSense Ad Unit: Uncomment and replace SLOT_ID -->
+    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXX" data-ad-slot="SLOT_ID" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
+    <!-- <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script> -->
+    <span style="font-size:0.6rem;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">— Espacio Publicitario —</span>
+  </div>
+  </div>
+</div>
+
+<!-- ============================= TAB: EQUATIONS ============================= -->
+<div id="tab-equations" class="tab-content">
+  <div class="eq-card">
+    <h4>⭐ Mínima Curvatura (Minimum Curvature)</h4>
+    <div class="eq">
+      <p>Estándar de la industria (SPE). Ratio factor basado en dogleg angle:</p>
+      <p style="margin:8px 0;">cosθ = sinI₁·sinI₂·(cos(A₂-A₁) - 1) + cos(I₂-I₁)</p>
+      <p>RF = (2/θ)·tan(θ/2)</p>
+      <p style="margin:8px 0;">ΔTVD = (ΔMD/2)·(cosI₁ + cosI₂)·RF</p>
+      <p>ΔN = (ΔMD/2)·(sinI₁·cosA₁ + sinI₂·cosA₂)·RF</p>
+      <p>ΔE = (ΔMD/2)·(sinI₁·sinA₁ + sinI₂·sinA₂)·RF</p>
+      <p style="margin-top:8px;color:var(--text-muted);font-size:0.7rem;">Ref: Sawaryn & Thorogood (2005), SPE-84246</p>
+    </div>
+  </div>
+
+  <div class="eq-card" style="border-left-color:var(--accent2);">
+    <h4 style="color:var(--accent2);">Ángulos Promedio (Average Angle)</h4>
+    <div class="eq">
+      <p>ΔTVD = ΔMD · cos((I₁+I₂)/2)</p>
+      <p>ΔE = ΔMD · sin((I₁+I₂)/2) · sin((A₁+A₂)/2)</p>
+      <p>ΔN = ΔMD · sin((I₁+I₂)/2) · cos((A₁+A₂)/2)</p>
+    </div>
+  </div>
+
+  <div class="eq-card" style="border-left-color:var(--accent-danger);">
+    <h4 style="color:var(--accent-danger);">Tangencial</h4>
+    <div class="eq">
+      <p>Usa solo ángulos del punto inferior (menos preciso):</p>
+      <p>ΔTVD = ΔMD · cos(I₂)</p>
+      <p>ΔE = ΔMD · sin(I₂) · sin(A₂)</p>
+      <p>ΔN = ΔMD · sin(I₂) · cos(A₂)</p>
+    </div>
+  </div>
+
+  <div class="eq-card" style="border-left-color:var(--accent-warn);">
+    <h4 style="color:var(--accent-warn);">Dogleg Severity (DLS)</h4>
+    <div class="eq">
+      <p>DLS = (θ / ΔMD) × 100  (°/100ft)</p>
+      <p style="margin-top:6px;">Límites: &lt;3 = suave · 3-6 = moderado · &gt;6 = severo</p>
+    </div>
+  </div>
+
+  <div class="eq-card" style="border-left-color:var(--accent3);">
+    <h4 style="color:var(--accent3);">Diseño Tipo I (Build & Hold)</h4>
+    <div class="eq">
+      <p>R = 18000 / (π · BUR)</p>
+      <p>α = arctan((Hd-R)/(TVD-KOP)) + arcsin((R·cos(angX))/(TVD-KOP))</p>
+      <p>MD_build = KOP + (100·α)/BUR</p>
+    </div>
+  </div>
+
+  <div class="eq-card" style="border-left-color:var(--accent3);">
+    <h4 style="color:var(--accent3);">Diseño Tipo II (S-Curve)</h4>
+    <div class="eq">
+      <p>R₁ = 18000/(π·BUR) , R₂ = 18000/(π·DOR)</p>
+      <p>α₁ = arctan(OQ/OP) + arctan(QS/PS)</p>
+      <p style="margin-top:4px;color:var(--text-muted);font-size:0.7rem;">Ref: Inglis (1987), Guan et al. (2021)</p>
+    </div>
+  </div>
+
+  <div class="eq-card" style="border-left-color:var(--accent3);">
+    <h4 style="color:var(--accent3);">Diseño Tipo III (Horizontal)</h4>
+    <div class="eq">
+      <p>Inc final = 90°</p>
+      <p>MD_build = 9000 / BUR</p>
+      <p>TVD_landing = KOP + R</p>
+      <p>MD_total = KOP + MD_build + L_horizontal</p>
+    </div>
+  </div>
+
+  <!-- AD SLOT -->
+  <div class="ad-slot">
+    <!-- AdSense Ad Unit: Uncomment and replace SLOT_ID -->
+    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXX" data-ad-slot="SLOT_ID" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
+    <!-- <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script> -->
+    <span style="font-size:0.6rem;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">— Espacio Publicitario —</span>
+  </div>
+</div>
+
+<!-- ============================= JAVASCRIPT ============================= -->
+<script>
+// =============================================================================
+// MATH HELPERS
+// =============================================================================
+const RAD = g => g * Math.PI / 180;
+const DEG = r => r * 180 / Math.PI;
+
+// =============================================================================
+// PLOTLY LAYOUT DEFAULTS (mobile-optimized, dark theme)
+// =============================================================================
+const COLORS = { mc:'#34d399', avg:'#60a5fa', tan:'#f87171', primary:'#22d3ee', warn:'#fbbf24', danger:'#f87171' };
+const plotLayout = (opts={}) => ({
+  paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+  font: { family:'DM Sans', color:'#94a3b8', size:11 },
+  margin: { l:50, r:20, t:10, b:45 },
+  legend: { orientation:'h', y:-0.2, font:{size:10} },
+  xaxis: { gridcolor:'#1e293b', zerolinecolor:'#334155', ...opts.xaxis },
+  yaxis: { gridcolor:'#1e293b', zerolinecolor:'#334155', ...opts.yaxis },
+  ...opts
+});
+const plotConfig = { displaylogo:false, responsive:true, modeBarButtonsToRemove:['lasso2d','select2d'] };
+
+// =============================================================================
+// TAB SWITCHING
+// =============================================================================
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(btn) btn.classList.add('active');
+  else document.querySelector('.tab-btn[onclick*="'+tab+'"]')?.classList.add('active');
+  setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+}
+
+function switchDesignSub(sub) {
+  document.getElementById('d_sub_plots').style.display = sub==='plots'?'block':'none';
+  document.getElementById('d_sub_table').style.display = sub==='table'?'block':'none';
+  document.querySelectorAll('#tab-design .sub-tab').forEach((el,i) => el.classList.toggle('active', (sub==='plots'?0:1)===i));
+  if(sub==='plots') setTimeout(()=>window.dispatchEvent(new Event('resize')),100);
+}
+
+function switchSurveySub(sub) {
+  document.getElementById('c_sub_plots').style.display = sub==='plots'?'block':'none';
+  document.getElementById('c_sub_tables').style.display = sub==='tables'?'block':'none';
+  document.querySelectorAll('#tab-survey .sub-tab').forEach((el,i) => el.classList.toggle('active', (sub==='plots'?0:1)===i));
+  if(sub==='plots') setTimeout(()=>window.dispatchEvent(new Event('resize')),100);
+}
+
+// =============================================================================
+// DESIGN: UI UPDATES
+// =============================================================================
+function onDesignTypeChange() {
+  const t = document.getElementById('d_tipo').value;
+  const t2 = document.getElementById('d_type2_inputs');
+  t2.style.display = t==='II' ? 'block' : 'none';
+
+  // Labels
+  if(t==='III') {
+    document.getElementById('lbl_hd').textContent = 'Long. Sección Horiz. (ft)';
+    document.getElementById('lbl_tvd').textContent = 'TVD Landing (ft)';
+  } else {
+    document.getElementById('lbl_hd').textContent = 'Desplaz. Horiz. (ft)';
+    document.getElementById('lbl_tvd').textContent = 'TVD Objetivo (ft)';
+  }
+}
+
+function loadDesignExample(n) {
+  document.querySelectorAll('.btn-example').forEach((el,i)=>el.classList.toggle('active',i===n-1));
+  if(n===1) { setVal('d_tipo','I'); setVal('d_hd',3000); setVal('d_tvd',10000); setVal('d_az',45); setVal('d_kop',2000); setVal('d_bur',2); }
+  if(n===2) { setVal('d_tipo','II'); setVal('d_hd',6000); setVal('d_tvd',12000); setVal('d_az',90); setVal('d_kop',1500); setVal('d_bur',2); setVal('d_tvd_drop',11000); setVal('d_dor',1.5); setVal('d_inc_final',20); }
+  if(n===3) { setVal('d_tipo','III'); setVal('d_hd',3000); setVal('d_tvd',8000); setVal('d_az',45); setVal('d_kop',5000); setVal('d_bur',3); }
+  onDesignTypeChange();
+}
+function setVal(id,v) { const el=document.getElementById(id); if(el) el.value=v; }
+function getNum(id) { return parseFloat(document.getElementById(id).value)||0; }
+
+// =============================================================================
+// DESIGN: TRAJECTORY CALCULATIONS (ported from R)
+// =============================================================================
+
+// Average Angle position calculator
+function calcPositions(tray) {
+  const n = tray.length;
+  for(let i=1; i<n; i++) {
+    const dMD = tray[i].MD - tray[i-1].MD;
+    const I1=RAD(tray[i-1].Inc), I2=RAD(tray[i].Inc);
+    const A1=RAD(tray[i-1].Az), A2=RAD(tray[i].Az);
+    tray[i].DTVD = dMD * Math.cos((I1+I2)/2);
+    tray[i].DX   = dMD * Math.sin((I1+I2)/2) * Math.sin((A1+A2)/2);
+    tray[i].DY   = dMD * Math.sin((I1+I2)/2) * Math.cos((A1+A2)/2);
+  }
+  let tvd=0, x=0, y=0;
+  for(let i=0; i<n; i++) {
+    tvd += (tray[i].DTVD||0); x += (tray[i].DX||0); y += (tray[i].DY||0);
+    tray[i].TVD=tvd; tray[i].X=Math.round(x*100)/100; tray[i].Y=Math.round(y*100)/100;
+    tray[i].HD = Math.round(Math.sqrt(x*x+y*y)*100)/100;
+  }
+  return tray;
+}
+
+// Tangential
+function calcPositionsTangential(tray) {
+  const n=tray.length;
+  for(let i=1;i<n;i++){
+    const dMD=tray[i].MD-tray[i-1].MD;
+    const I2=RAD(tray[i].Inc), A2=RAD(tray[i].Az);
+    tray[i].DTVD=dMD*Math.cos(I2); tray[i].DX=dMD*Math.sin(I2)*Math.sin(A2); tray[i].DY=dMD*Math.sin(I2)*Math.cos(A2);
+  }
+  let tvd=0,x=0,y=0;
+  for(let i=0;i<n;i++){tvd+=(tray[i].DTVD||0);x+=(tray[i].DX||0);y+=(tray[i].DY||0);tray[i].TVD=tvd;tray[i].X=Math.round(x*100)/100;tray[i].Y=Math.round(y*100)/100;tray[i].HD=Math.round(Math.sqrt(x*x+y*y)*100)/100;}
+  return tray;
+}
+
+// Minimum Curvature
+function calcPositionsMinCurvature(tray) {
+  const n=tray.length;
+  for(let i=1;i<n;i++){
+    const dMD=tray[i].MD-tray[i-1].MD;
+    const I1=RAD(tray[i-1].Inc),I2=RAD(tray[i].Inc),A1=RAD(tray[i-1].Az),A2=RAD(tray[i].Az);
+    let cosTheta=Math.sin(I1)*Math.sin(I2)*(Math.cos(A2-A1)-1)+Math.cos(I2-I1);
+    cosTheta=Math.max(Math.min(cosTheta,1),-1);
+    const theta=Math.acos(cosTheta);
+    const RF=Math.abs(theta)<1e-7?1:(2/theta)*Math.tan(theta/2);
+    tray[i].DTVD=(dMD/2)*(Math.cos(I1)+Math.cos(I2))*RF;
+    tray[i].DY=(dMD/2)*(Math.sin(I1)*Math.cos(A1)+Math.sin(I2)*Math.cos(A2))*RF;
+    tray[i].DX=(dMD/2)*(Math.sin(I1)*Math.sin(A1)+Math.sin(I2)*Math.sin(A2))*RF;
+    tray[i].DLS=dMD>0? Math.round(DEG(theta)/dMD*100*100)/100 : 0;
+  }
+  let tvd=0,x=0,y=0;
+  for(let i=0;i<n;i++){tvd+=(tray[i].DTVD||0);x+=(tray[i].DX||0);y+=(tray[i].DY||0);tray[i].TVD=tvd;tray[i].X=Math.round(x*100)/100;tray[i].Y=Math.round(y*100)/100;tray[i].HD=Math.round(Math.sqrt(x*x+y*y)*100)/100;}
+  return tray;
+}
+
+// DLS calculator
+function calcDLS(tray) {
+  tray[0].DLS = 0;
+  for(let i=1;i<tray.length;i++){
+    const dMD=tray[i].MD-tray[i-1].MD;
+    const I1=RAD(tray[i-1].Inc),I2=RAD(tray[i].Inc),A1=RAD(tray[i-1].Az),A2=RAD(tray[i].Az);
+    let cosTheta=Math.sin(I1)*Math.sin(I2)*(Math.cos(A2-A1)-1)+Math.cos(I2-I1);
+    cosTheta=Math.max(Math.min(cosTheta,1),-1);
+    const theta=Math.acos(cosTheta);
+    tray[i].DLS = dMD>0 ? Math.round(DEG(theta)/dMD*100*100)/100 : 0;
+  }
+  return tray;
+}
+
+// --- DESIGN TYPE I ---
+function designTypeI(TVD,Hd,KOP,BUR,az) {
+  if(KOP>=TVD) throw new Error('KOP debe ser menor que TVD');
+  if(Hd<=0) throw new Error('Desplazamiento horizontal debe ser positivo');
+  if(BUR<0.5||BUR>15) throw new Error('BUR debe estar entre 0.5 y 15°/100ft');
+  const R=18000/(Math.PI*BUR);
+  const angX=DEG(Math.atan((Hd-R)/(TVD-KOP)));
+  const angY=DEG(Math.asin((R*Math.cos(RAD(angX)))/(TVD-KOP)));
+  const alpha=angX+angY;
+  if(alpha<=0||alpha>=90) throw new Error('Ángulo calculado fuera de rango. Revise datos.');
+
+  const MD_C=KOP+(100*alpha)/BUR;
+  const TVD_C=KOP+R*Math.sin(RAD(alpha));
+  const HD_C=R-R*Math.cos(RAD(alpha));
+  const ET=((TVD-KOP)-R*Math.sin(RAD(alpha)))/Math.cos(RAD(alpha));
+  const MD_T=MD_C+ET;
+
+  const puntos=[
+    {Seccion:'Superficie',TVD:0,MD:0,Inc:0,HD:0},
+    {Seccion:'KOP',TVD:KOP,MD:KOP,Inc:0,HD:0},
+    {Seccion:'Fin Build-Up',TVD:R1d(TVD_C),MD:R1d(MD_C),Inc:R2d(alpha),HD:R1d(HD_C)},
+    {Seccion:'Objetivo (TD)',TVD:R1d(TVD),MD:R1d(MD_T),Inc:R2d(alpha),HD:R1d(Hd)}
+  ];
+
+  // Build trajectory
+  let mdBuild=arange(KOP,MD_C,100); if(mdBuild[mdBuild.length-1]!==MD_C) mdBuild.push(MD_C);
+  const incBuild=linspace(0,alpha,mdBuild.length);
+  let tray=[{MD:0,Inc:0,Az:az,DTVD:0,DX:0,DY:0}];
+  for(let i=0;i<mdBuild.length;i++) tray.push({MD:mdBuild[i],Inc:incBuild[i],Az:az,DTVD:0,DX:0,DY:0});
+  tray.push({MD:MD_T,Inc:alpha,Az:az,DTVD:0,DX:0,DY:0});
+  tray = calcPositions(tray);
+  tray = calcDLS(tray);
+  return {puntos,trayectoria:tray,alpha,R};
+}
+
+// --- DESIGN TYPE II ---
+function designTypeII(TVD,Hd,KOP,BUR,DOR,TVD_drop,alpha2,az) {
+  if(KOP>=TVD) throw new Error('KOP debe ser menor que TVD');
+  if(TVD_drop<=KOP) throw new Error('TVD inicio drop > KOP');
+  if(TVD_drop>=TVD) throw new Error('TVD inicio drop < TVD');
+  const R1=18000/(Math.PI*BUR), R2=18000/(Math.PI*DOR);
+  const OQ=Hd-R1-R2*Math.cos(RAD(alpha2))-(TVD-TVD_drop)*Math.tan(RAD(alpha2));
+  const OP=TVD_drop-KOP+R2*Math.sin(RAD(alpha2));
+  const QS=R1+R2, PQ=Math.sqrt(OP*OP+OQ*OQ);
+  if(PQ*PQ<QS*QS) throw new Error('Geometría no factible. Ajuste HD o tasas.');
+  const PS=Math.sqrt(PQ*PQ-QS*QS);
+  const angX=DEG(Math.atan(OQ/OP)), angY=DEG(Math.atan(QS/PS));
+  const alpha1=angX+angY;
+  if(alpha1<=0||alpha1>=90) throw new Error('Ángulo de build fuera de rango.');
+
+  const Vc=KOP+R1*Math.sin(RAD(alpha1)), Hc=R1-R1*Math.cos(RAD(alpha1)), MDc=KOP+(100*alpha1)/BUR;
+  const Vd=Vc+PS*Math.cos(RAD(alpha1)), Hd_d=Hc+PS*Math.sin(RAD(alpha1)), MDd=MDc+PS;
+  const Ve=TVD_drop, He=Hd_d+R2*(Math.cos(RAD(alpha2))-Math.cos(RAD(alpha1))), MDe=MDd+(100*(alpha1-alpha2))/DOR;
+  const MDt=MDe+(TVD-Ve)/Math.cos(RAD(alpha2));
+
+  const puntos=[
+    {Seccion:'Superficie',TVD:0,MD:0,Inc:0,HD:0},
+    {Seccion:'KOP',TVD:KOP,MD:KOP,Inc:0,HD:0},
+    {Seccion:'Fin Build-Up',TVD:R1d(Vc),MD:R1d(MDc),Inc:R2d(alpha1),HD:R1d(Hc)},
+    {Seccion:'Inicio Drop',TVD:R1d(Vd),MD:R1d(MDd),Inc:R2d(alpha1),HD:R1d(Hd_d)},
+    {Seccion:'Fin Drop',TVD:R1d(Ve),MD:R1d(MDe),Inc:R2d(alpha2),HD:R1d(He)},
+    {Seccion:'Objetivo (TD)',TVD:R1d(TVD),MD:R1d(MDt),Inc:R2d(alpha2),HD:R1d(Hd)}
+  ];
+
+  let mdBuild=arange(KOP,MDc,100); if(mdBuild[mdBuild.length-1]!==MDc) mdBuild.push(MDc);
+  const incBuild=linspace(0,alpha1,mdBuild.length);
+  let mdHold=arange(MDc,MDd,200); if(mdHold.length<2) mdHold=[MDc,MDd]; if(mdHold[mdHold.length-1]!==MDd) mdHold.push(MDd);
+  const incHold=new Array(mdHold.length).fill(alpha1);
+  let mdDrop=arange(MDd,MDe,100); if(mdDrop[mdDrop.length-1]!==MDe) mdDrop.push(MDe);
+  const incDrop=linspace(alpha1,alpha2,mdDrop.length);
+
+  let tray=[{MD:0,Inc:0,Az:az,DTVD:0,DX:0,DY:0}];
+  mdBuild.forEach((m,i)=>tray.push({MD:m,Inc:incBuild[i],Az:az,DTVD:0,DX:0,DY:0}));
+  for(let i=1;i<mdHold.length;i++) tray.push({MD:mdHold[i],Inc:incHold[i],Az:az,DTVD:0,DX:0,DY:0});
+  for(let i=1;i<mdDrop.length;i++) tray.push({MD:mdDrop[i],Inc:incDrop[i],Az:az,DTVD:0,DX:0,DY:0});
+  tray.push({MD:MDt,Inc:alpha2,Az:az,DTVD:0,DX:0,DY:0});
+  tray=calcPositions(tray);
+  tray=calcDLS(tray);
+  return {puntos,trayectoria:tray,alpha1,alpha2,R1,R2};
+}
+
+// --- DESIGN TYPE III ---
+function designTypeIII(TVD_land,Hd_lat,KOP,BUR,az) {
+  const R=18000/(Math.PI*BUR);
+  if(R>(TVD_land-KOP)) throw new Error(`Radio (${Math.round(R)} ft) > espacio (${TVD_land-KOP} ft). Aumente BUR.`);
+  if(KOP>=TVD_land) throw new Error('KOP debe ser < TVD landing');
+  const MD_build=(100*90)/BUR;
+  let KOP_adj=KOP;
+  if(TVD_land>KOP+R+1) KOP_adj=Math.max(KOP,TVD_land-R);
+  const TVD_C=KOP_adj+R, HD_C=R, MD_C=KOP_adj+MD_build;
+  const MD_T=MD_C+Hd_lat, HD_T=HD_C+Hd_lat;
+
+  const puntos=[
+    {Seccion:'Superficie',TVD:0,MD:0,Inc:0,HD:0},
+    {Seccion:'KOP',TVD:KOP_adj,MD:KOP_adj,Inc:0,HD:0},
+    {Seccion:'Landing (90°)',TVD:R1d(TVD_C),MD:R1d(MD_C),Inc:90,HD:R1d(HD_C)},
+    {Seccion:'TD Horizontal',TVD:R1d(TVD_C),MD:R1d(MD_T),Inc:90,HD:R1d(HD_T)}
+  ];
+
+  let mdBuild=arange(KOP_adj,MD_C,100); if(mdBuild[mdBuild.length-1]!==MD_C) mdBuild.push(MD_C);
+  const incBuild=linspace(0,90,mdBuild.length);
+  let mdHoriz=arange(MD_C+100,MD_T,200);
+  if(mdHoriz.length===0||mdHoriz[mdHoriz.length-1]!==MD_T) mdHoriz.push(MD_T);
+
+  let tray=[{MD:0,Inc:0,Az:az,DTVD:0,DX:0,DY:0}];
+  mdBuild.forEach((m,i)=>tray.push({MD:m,Inc:incBuild[i],Az:az,DTVD:0,DX:0,DY:0}));
+  mdHoriz.forEach(m=>tray.push({MD:m,Inc:90,Az:az,DTVD:0,DX:0,DY:0}));
+  tray=calcPositions(tray);
+  tray=calcDLS(tray);
+  return {puntos,trayectoria:tray,alpha:90,R};
+}
+
+// Helpers
+function R1d(v){return Math.round(v*10)/10;}
+function R2d(v){return Math.round(v*100)/100;}
+function arange(start,end,step){const a=[];for(let v=start;v<=end+0.001;v+=step)a.push(Math.round(v*1000)/1000);return a;}
+function linspace(a,b,n){if(n<2)return[a];const s=(b-a)/(n-1);return Array.from({length:n},(_,i)=>a+i*s);}
+
+// =============================================================================
+// DESIGN: MAIN CALCULATE
+// =============================================================================
+let currentDesignResult = null;
+
+function calculateDesign() {
+  document.getElementById('d_error').style.display='none';
+  try {
+    const tipo=document.getElementById('d_tipo').value;
+    const az=getNum('d_az'), kop=getNum('d_kop'), bur=getNum('d_bur');
+    let res;
+    if(tipo==='I') res=designTypeI(getNum('d_tvd'),getNum('d_hd'),kop,bur,az);
+    else if(tipo==='II') res=designTypeII(getNum('d_tvd'),getNum('d_hd'),kop,bur,getNum('d_dor'),getNum('d_tvd_drop'),getNum('d_inc_final'),az);
+    else res=designTypeIII(getNum('d_tvd'),getNum('d_hd'),kop,bur,az);
+    currentDesignResult=res;
+    renderDesignResults(res);
+  } catch(e) {
+    document.getElementById('d_error').textContent='⚠️ '+e.message;
+    document.getElementById('d_error').style.display='block';
+    document.getElementById('d_results').style.display='none';
+  }
+}
+
+function renderDesignResults(res) {
+  document.getElementById('d_results').style.display='block';
+  const t=res.trayectoria, p=res.puntos, td=p[p.length-1];
+  const dlsMax=Math.max(...t.map(r=>r.DLS||0));
+  const incMax=Math.max(...p.map(r=>r.Inc));
+
+  // Fichas
+  document.getElementById('d_fichas').innerHTML=`
+    <div class="ficha"><div class="label">Tipo</div><div class="value">${document.getElementById('d_tipo').value}</div></div>
+    <div class="ficha green"><div class="label">TVD</div><div class="value">${fmt(td.TVD)}</div><div class="unit">ft</div></div>
+    <div class="ficha"><div class="label">MD Total</div><div class="value">${fmt(td.MD)}</div><div class="unit">ft</div></div>
+    <div class="ficha warn"><div class="label">Inc Max</div><div class="value">${R2d(incMax)}°</div></div>
+    <div class="ficha ${dlsMax>6?'danger':'warn'}"><div class="label">DLS Max</div><div class="value">${R2d(dlsMax)}</div><div class="unit">°/100ft</div></div>
+    <div class="ficha purple"><div class="label">Azimut</div><div class="value">${getNum('d_az')}°</div></div>`;
+
+  // Plots
+  plotDesignTVD(t); plotDesignXY(t); plotDesign3D(t); plotDesignDLS(t);
+
+  // Tables
+  renderTable('d_table_puntos', ['Sección','TVD','MD','Inc','HD'], p.map(r=>[r.Seccion,r.TVD,r.MD,r.Inc,r.HD]));
+  renderTable('d_table_tray', ['MD','Inc','Az','TVD','X','Y','HD','DLS'],
+    t.map(r=>[R1d(r.MD),R2d(r.Inc),R1d(r.Az),R1d(r.TVD),r.X,r.Y,r.HD,r.DLS||0]));
+
+  // Scroll to results
+  setTimeout(()=>document.getElementById('d_fichas').scrollIntoView({behavior:'smooth',block:'start'}),200);
+}
+
+function fmt(v) { return Math.round(v).toLocaleString(); }
+
+// =============================================================================
+// DESIGN: PLOTS
+// =============================================================================
+function plotDesignTVD(t) {
+  Plotly.newPlot('d_plot_tvd',[{x:t.map(r=>r.HD),y:t.map(r=>r.TVD),type:'scatter',mode:'lines+markers',
+    line:{color:COLORS.primary,width:3},marker:{size:4}}],
+    plotLayout({xaxis:{title:'Desplaz. Horizontal (ft)'},yaxis:{title:'TVD (ft)',autorange:'reversed'}}),plotConfig);
+}
+function plotDesignXY(t) {
+  Plotly.newPlot('d_plot_xy',[{x:t.map(r=>r.X),y:t.map(r=>r.Y),type:'scatter',mode:'lines+markers',
+    line:{color:'#34d399',width:3},marker:{size:4}}],
+    plotLayout({xaxis:{title:'Este-X (ft)'},yaxis:{title:'Norte-Y (ft)',scaleanchor:'x'}}),plotConfig);
+}
+function plotDesign3D(t) {
+  Plotly.newPlot('d_plot_3d',[{x:t.map(r=>r.X),y:t.map(r=>r.Y),z:t.map(r=>r.TVD),type:'scatter3d',mode:'lines',
+    line:{color:COLORS.primary,width:6}}],{
+    paper_bgcolor:'rgba(0,0,0,0)',font:{family:'DM Sans',color:'#94a3b8',size:10},
+    margin:{l:0,r:0,t:0,b:0},
+    scene:{xaxis:{title:'Este (ft)',gridcolor:'#1e293b',backgroundcolor:'rgba(0,0,0,0)'},
+           yaxis:{title:'Norte (ft)',gridcolor:'#1e293b',backgroundcolor:'rgba(0,0,0,0)'},
+           zaxis:{title:'TVD (ft)',autorange:'reversed',gridcolor:'#1e293b',backgroundcolor:'rgba(0,0,0,0)'},
+           camera:{eye:{x:1.5,y:1.5,z:0.3}}}},plotConfig);
+}
+function plotDesignDLS(t) {
+  const mdRange=[t[0].MD,t[t.length-1].MD];
+  Plotly.newPlot('d_plot_dls',[
+    {x:t.map(r=>r.MD),y:t.map(r=>r.DLS||0),type:'scatter',mode:'lines+markers',name:'DLS',line:{color:COLORS.danger,width:2},marker:{size:4}},
+    {x:mdRange,y:[3,3],type:'scatter',mode:'lines',name:'Límite 3°',line:{color:COLORS.warn,width:1,dash:'dash'}}
+  ],plotLayout({xaxis:{title:'MD (ft)'},yaxis:{title:'DLS (°/100ft)'}}),plotConfig);
+}
+
+// =============================================================================
+// SURVEY: EMBEDDED DATA
+// =============================================================================
+function surveyExample(n) {
+  if(n==='1') return {MD:[0,1000,2000,3000,4000,5000,6000,7000,8000,9000,10000],Inc:[0,0,5,15,30,45,55,55,55,55,55],Az:[0,0,45,45,45,45,45,45,45,45,45]};
+  if(n==='2') return {MD:[0,500,1000,1500,2000,2500,3000,3500,4000,4500,5000,5500,6000,6500,7000,7500,8000,8500,9000,9500,10000,10500,11000,11500,12000,12500,13000],
+    Inc:[0,0,0,2,6,12,20,28,35,38,38,38,38,38,38,35,30,24,18,12,8,5,3,2,1,0.5,0],Az:new Array(27).fill(90)};
+  return {MD:[0,1000,2000,3000,3500,4000,4500,5000,5500,6000,6500,7000,7500,8000,8500,9000,9500,10000,10500,11000],
+    Inc:[0,0,0,5,15,30,50,70,85,90,90,90,90,90,90,90,90,90,90,90],Az:new Array(20).fill(135)};
+}
+
+let currentSurveyResult = null;
+let currentSurveyInput = null;
+
+function onCSVSelected(input) {
+  if(input.files.length) document.getElementById('c_file_label').textContent='📄 '+input.files[0].name;
+}
+
+function calculateSurvey() {
+  document.getElementById('c_error').style.display='none';
+  try {
+    let datos;
+    const fileInput=document.getElementById('c_file');
+    if(fileInput.files.length>0) {
+      // Read CSV file
+      const reader=new FileReader();
+      reader.onload=function(e){
+        try {
+          const sepVal=document.getElementById('c_sep').value;
+          const sep=sepVal==='tab'?'\t':sepVal;
+          datos=parseCSV(e.target.result,sep);
+          processSurvey(datos);
+        }catch(err){
+          document.getElementById('c_error').textContent='⚠️ Error leyendo CSV: '+err.message;
+          document.getElementById('c_error').style.display='block';
+        }
+      };
+      reader.readAsText(fileInput.files[0]);
+      return;
+    }
+    // Use example
+    const ex=surveyExample(document.getElementById('c_ejemplo').value);
+    datos=ex.MD.map((m,i)=>({MD:m,Inc:ex.Inc[i],Az:ex.Az[i]}));
+    processSurvey(datos);
+  }catch(e){
+    document.getElementById('c_error').textContent='⚠️ '+e.message;
+    document.getElementById('c_error').style.display='block';
+  }
+}
+
+function parseCSV(text,sep) {
+  const lines=text.trim().split('\n');
+  const data=[];
+  for(let i=0;i<lines.length;i++){
+    const cols=lines[i].split(sep).map(s=>s.replace(/"/g,'').trim());
+    if(i===0&&isNaN(parseFloat(cols[0]))) continue; // skip header
+    if(cols.length>=3) data.push({MD:parseFloat(cols[0]),Inc:parseFloat(cols[1]),Az:parseFloat(cols[2])});
+  }
+  if(data.length<2) throw new Error('Se necesitan al menos 2 estaciones de survey');
+  return data;
+}
+
+function processSurvey(datos) {
+  currentSurveyInput=datos;
+  // Deep copy for each method
+  const t1=JSON.parse(JSON.stringify(datos)).map(r=>({...r,DTVD:0,DX:0,DY:0,DLS:0}));
+  const t2=JSON.parse(JSON.stringify(datos)).map(r=>({...r,DTVD:0,DX:0,DY:0,DLS:0}));
+  const t3=JSON.parse(JSON.stringify(datos)).map(r=>({...r,DTVD:0,DX:0,DY:0,DLS:0}));
+
+  const tan=calcDLS(calcPositionsTangential(t1));
+  const avg=calcDLS(calcPositions(t2));
+  const mc=calcPositionsMinCurvature(t3);
+
+  currentSurveyResult={tangencial:tan,avg_angle:avg,min_curvature:mc};
+  renderSurveyResults();
+}
+
+function renderSurveyResults() {
+  document.getElementById('c_results').style.display='block';
+  const {tangencial:t1,avg_angle:t2,min_curvature:t3}=currentSurveyResult;
+
+  // Plots
+  plotSurvey3D(t1,t2,t3);
+  plotSurveyTVD(t1,t2,t3);
+  plotSurveyXY(t1,t2,t3);
+  plotSurveyDLS(t3);
+  plotSurveyInc(t3);
+  plotSurveyAz(t3);
+
+  // Tables
+  const cols=['MD','Inc','Az','TVD','X','Y','HD','DLS'];
+  const fmtRow=r=>[R1d(r.MD),R2d(r.Inc),R1d(r.Az),R1d(r.TVD),r.X,r.Y,r.HD,R2d(r.DLS||0)];
+  renderTable('c_table_mc',cols,t3.map(fmtRow));
+  renderTable('c_table_avg',cols,t2.map(fmtRow));
+  renderTable('c_table_tan',cols,t1.map(fmtRow));
+
+  setTimeout(()=>document.getElementById('c_results').scrollIntoView({behavior:'smooth',block:'start'}),200);
+}
+
+// =============================================================================
+// SURVEY: PLOTS
+// =============================================================================
+function plotSurvey3D(t1,t2,t3) {
+  Plotly.newPlot('c_plot_3d',[
+    {x:t3.map(r=>r.X),y:t3.map(r=>r.Y),z:t3.map(r=>r.TVD),type:'scatter3d',mode:'lines',name:'Min. Curvatura',line:{color:COLORS.mc,width:5}},
+    {x:t2.map(r=>r.X),y:t2.map(r=>r.Y),z:t2.map(r=>r.TVD),type:'scatter3d',mode:'lines',name:'Áng. Promedio',line:{color:COLORS.avg,width:3}},
+    {x:t1.map(r=>r.X),y:t1.map(r=>r.Y),z:t1.map(r=>r.TVD),type:'scatter3d',mode:'lines',name:'Tangencial',line:{color:COLORS.tan,width:3}}
+  ],{paper_bgcolor:'rgba(0,0,0,0)',font:{family:'DM Sans',color:'#94a3b8',size:10},margin:{l:0,r:0,t:0,b:0},
+    scene:{xaxis:{title:'Este',gridcolor:'#1e293b',backgroundcolor:'rgba(0,0,0,0)'},yaxis:{title:'Norte',gridcolor:'#1e293b',backgroundcolor:'rgba(0,0,0,0)'},
+      zaxis:{title:'TVD',autorange:'reversed',gridcolor:'#1e293b',backgroundcolor:'rgba(0,0,0,0)'},camera:{eye:{x:1.5,y:1.5,z:0.3}}},
+    legend:{orientation:'h',y:-0.05,font:{size:10}}},plotConfig);
+}
+function plotSurveyTVD(t1,t2,t3) {
+  Plotly.newPlot('c_plot_tvd',[
+    {x:t3.map(r=>r.HD),y:t3.map(r=>r.TVD),type:'scatter',mode:'lines',name:'Min. Curv.',line:{color:COLORS.mc,width:3}},
+    {x:t2.map(r=>r.HD),y:t2.map(r=>r.TVD),type:'scatter',mode:'lines',name:'Áng. Prom.',line:{color:COLORS.avg,width:2}},
+    {x:t1.map(r=>r.HD),y:t1.map(r=>r.TVD),type:'scatter',mode:'lines',name:'Tangencial',line:{color:COLORS.tan,width:2,dash:'dash'}}
+  ],plotLayout({xaxis:{title:'HD (ft)'},yaxis:{autorange:'reversed',title:'TVD (ft)'}}),plotConfig);
+}
+function plotSurveyXY(t1,t2,t3) {
+  Plotly.newPlot('c_plot_xy',[
+    {x:t3.map(r=>r.X),y:t3.map(r=>r.Y),type:'scatter',mode:'lines',name:'Min. Curv.',line:{color:COLORS.mc,width:3}},
+    {x:t2.map(r=>r.X),y:t2.map(r=>r.Y),type:'scatter',mode:'lines',name:'Áng. Prom.',line:{color:COLORS.avg,width:2}},
+    {x:t1.map(r=>r.X),y:t1.map(r=>r.Y),type:'scatter',mode:'lines',name:'Tangencial',line:{color:COLORS.tan,width:2,dash:'dash'}}
+  ],plotLayout({xaxis:{title:'Este-X (ft)'},yaxis:{title:'Norte-Y (ft)',scaleanchor:'x'}}),plotConfig);
+}
+function plotSurveyDLS(t3) {
+  Plotly.newPlot('c_plot_dls',[
+    {x:t3.map(r=>r.MD),y:t3.map(r=>r.DLS||0),type:'scatter',mode:'lines+markers',name:'DLS',line:{color:COLORS.danger,width:2},marker:{size:5}},
+    {x:[t3[0].MD,t3[t3.length-1].MD],y:[3,3],type:'scatter',mode:'lines',name:'Límite 3°',line:{color:COLORS.warn,width:1,dash:'dash'}}
+  ],plotLayout({xaxis:{title:'MD (ft)'},yaxis:{title:'DLS (°/100ft)'}}),plotConfig);
+}
+function plotSurveyInc(t3) {
+  Plotly.newPlot('c_plot_inc',[{x:t3.map(r=>r.MD),y:t3.map(r=>r.Inc),type:'scatter',mode:'lines+markers',
+    line:{color:'#60a5fa',width:2.5},marker:{size:5}}],
+    plotLayout({xaxis:{title:'MD (ft)'},yaxis:{title:'Inclinación (°)'}}),plotConfig);
+}
+function plotSurveyAz(t3) {
+  Plotly.newPlot('c_plot_az',[{x:t3.map(r=>r.MD),y:t3.map(r=>r.Az),type:'scatter',mode:'lines+markers',
+    line:{color:'#a78bfa',width:2.5},marker:{size:5}}],
+    plotLayout({xaxis:{title:'MD (ft)'},yaxis:{title:'Azimut (°)'}}),plotConfig);
+}
+
+// =============================================================================
+// TABLE RENDERING
+// =============================================================================
+function renderTable(containerId, headers, rows) {
+  let html='<table><thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>';
+  rows.forEach(row=>{html+='<tr>'+row.map(c=>'<td>'+c+'</td>').join('')+'</tr>';});
+  html+='</tbody></table>';
+  document.getElementById(containerId).innerHTML=html;
+}
+
+// =============================================================================
+// EXPORT FUNCTIONS
+// =============================================================================
+function exportDesignCSV() {
+  if(!currentDesignResult) return;
+  const t=currentDesignResult.trayectoria;
+  let csv='MD,Inc,Az,TVD,X,Y,HD,DLS\n';
+  t.forEach(r=>{csv+=`${R1d(r.MD)},${R2d(r.Inc)},${R1d(r.Az)},${R1d(r.TVD)},${r.X},${r.Y},${r.HD},${r.DLS||0}\n`;});
+  download('trajectory_design.csv',csv,'text/csv');
+}
+
+function exportSurveyCSV(method) {
+  if(!currentSurveyResult) return;
+  const t=currentSurveyResult.min_curvature;
+  let csv='MD,Inc,Az,TVD,X,Y,HD,DLS\n';
+  t.forEach(row=>{csv+=`${R1d(row.MD)},${R2d(row.Inc)},${R1d(row.Az)},${R1d(row.TVD)},${row.X},${row.Y},${row.HD},${R2d(row.DLS||0)}\n`;});
+  download('survey_min_curvature.csv',csv,'text/csv');
+}
+
+function exportSurveyDEV() {
+  if(!currentSurveyResult) return;
+  const t=currentSurveyResult.min_curvature;
+  let dev='# Wellpath export from Well Trajectory Calculator PWA v2.0\n';
+  dev+='# Method: Minimum Curvature\n';
+  dev+=`# Date: ${new Date().toISOString().split('T')[0]}\n`;
+  dev+='# Units: ft\n';
+  dev+='# MD       INC       AZ        TVD       X(East)   Y(North)  DLS\n';
+  t.forEach(row=>{
+    dev+=`${pad(R1d(row.MD),9)} ${pad(R2d(row.Inc),9)} ${pad(R1d(row.Az),9)} ${pad(R1d(row.TVD),9)} ${pad(row.X,9)} ${pad(row.Y,9)} ${pad(R2d(row.DLS||0),6)}\n`;
+  });
+  download('wellpath.dev',dev,'text/plain');
+}
+
+function pad(v,n){const s=String(v);return ' '.repeat(Math.max(0,n-s.length))+s;}
+function download(name,content,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();}
+
+// =============================================================================
+// PWA INSTALL PROMPT
+// =============================================================================
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBtn').style.display = 'block';
+});
+function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => {
+    deferredPrompt = null;
+    document.getElementById('installBtn').style.display = 'none';
+  });
+}
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBtn').style.display = 'none';
+});
+
+// =============================================================================
+// SERVICE WORKER REGISTRATION
+// =============================================================================
+if('serviceWorker' in navigator) {
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+// Auto-calculate on load with example 1
+window.addEventListener('load', ()=>{
+  loadDesignExample(1);
+  setTimeout(calculateDesign, 300);
+});
+</script>
+
+<!-- FOOTER -->
+<footer style="text-align:center;padding:20px 16px;font-size:0.68rem;color:var(--text-muted);border-top:1px solid var(--border);margin-top:20px;">
+  <p>Well Trajectory Calculator PWA v2.0 · <a href="https://github.com/rigochando" target="_blank" style="color:var(--accent);text-decoration:none;">Rigoberto Chandomi</a></p>
+  <p style="margin-top:4px;">Métodos: Tangencial · Ángulos Promedio · Mínima Curvatura · Pozos Tipo I, II, III</p>
+</footer>
+
+</body>
+</html>
