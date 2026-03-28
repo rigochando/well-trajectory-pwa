@@ -16,6 +16,26 @@
 <!-- ADSENSE PLACEHOLDER - Replace with your actual AdSense code -->
 <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXX" crossorigin="anonymous"></script> -->
 
+<!-- GOOGLE ANALYTICS 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-27P063HNEK"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-27P063HNEK');
+
+  // ===== TRACKING HELPER =====
+  function trackEvent(action, category, label, value) {
+    if (typeof gtag === 'function') {
+      gtag('event', action, {
+        event_category: category,
+        event_label: label,
+        value: value || 0
+      });
+    }
+  }
+</script>
+
 <style>
 :root {
   --bg-primary: #0f172a;
@@ -599,6 +619,7 @@ const plotConfig = { displaylogo:false, responsive:true, modeBarButtonsToRemove:
 // TAB SWITCHING
 // =============================================================================
 function switchTab(tab, btn) {
+  trackEvent('navigation', 'tab', tab);
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
@@ -847,6 +868,7 @@ function calculateDesign() {
   document.getElementById('d_error').style.display='none';
   try {
     const tipo=document.getElementById('d_tipo').value;
+    trackEvent('calculate', 'design', 'tipo_'+tipo);
     const az=getNum('d_az'), kop=getNum('d_kop'), bur=getNum('d_bur');
     let res;
     if(tipo==='I') res=designTypeI(getNum('d_tvd'),getNum('d_hd'),kop,bur,az);
@@ -945,6 +967,7 @@ function calculateSurvey() {
     let datos;
     const fileInput=document.getElementById('c_file');
     if(fileInput.files.length>0) {
+      trackEvent('calculate', 'survey', 'csv_upload');
       // Read CSV file
       const reader=new FileReader();
       reader.onload=function(e){
@@ -962,7 +985,9 @@ function calculateSurvey() {
       return;
     }
     // Use example
-    const ex=surveyExample(document.getElementById('c_ejemplo').value);
+    const ejVal=document.getElementById('c_ejemplo').value;
+    trackEvent('calculate', 'survey', 'ejemplo_'+ejVal);
+    const ex=surveyExample(ejVal);
     datos=ex.MD.map((m,i)=>({MD:m,Inc:ex.Inc[i],Az:ex.Az[i]}));
     processSurvey(datos);
   }catch(e){
@@ -1079,6 +1104,7 @@ function renderTable(containerId, headers, rows) {
 // =============================================================================
 function exportDesignCSV() {
   if(!currentDesignResult) return;
+  trackEvent('export', 'design', 'csv');
   const t=currentDesignResult.trayectoria;
   let csv='MD,Inc,Az,TVD,X,Y,HD,DLS\n';
   t.forEach(r=>{csv+=`${R1d(r.MD)},${R2d(r.Inc)},${R1d(r.Az)},${R1d(r.TVD)},${r.X},${r.Y},${r.HD},${r.DLS||0}\n`;});
@@ -1087,6 +1113,7 @@ function exportDesignCSV() {
 
 function exportSurveyCSV(method) {
   if(!currentSurveyResult) return;
+  trackEvent('export', 'survey', 'csv');
   const t=currentSurveyResult.min_curvature;
   let csv='MD,Inc,Az,TVD,X,Y,HD,DLS\n';
   t.forEach(row=>{csv+=`${R1d(row.MD)},${R2d(row.Inc)},${R1d(row.Az)},${R1d(row.TVD)},${row.X},${row.Y},${row.HD},${R2d(row.DLS||0)}\n`;});
@@ -1095,6 +1122,7 @@ function exportSurveyCSV(method) {
 
 function exportSurveyDEV() {
   if(!currentSurveyResult) return;
+  trackEvent('export', 'survey', 'dev_petrel');
   const t=currentSurveyResult.min_curvature;
   let dev='# Wellpath export from Well Trajectory Calculator PWA v2.0\n';
   dev+='# Method: Minimum Curvature\n';
@@ -1121,6 +1149,7 @@ window.addEventListener('beforeinstallprompt', e => {
 });
 function installPWA() {
   if (!deferredPrompt) return;
+  trackEvent('install', 'pwa', 'prompt_shown');
   deferredPrompt.prompt();
   deferredPrompt.userChoice.then(() => {
     deferredPrompt = null;
@@ -1128,20 +1157,51 @@ function installPWA() {
   });
 }
 window.addEventListener('appinstalled', () => {
+  trackEvent('install', 'pwa', 'completed');
   document.getElementById('installBtn').style.display = 'none';
 });
 
 // =============================================================================
-// SERVICE WORKER REGISTRATION
+// SERVICE WORKER + AUTO-UPDATE SYSTEM
 // =============================================================================
 if('serviceWorker' in navigator) {
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      // Revisar actualizaciones cada 60 minutos
+      setInterval(() => reg.update(), 60 * 60 * 1000);
+
+      // Detectar cuando hay un nuevo SW esperando
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'activated') {
+            showUpdateBanner();
+          }
+        });
+      });
+    }).catch(() => {});
+
+    // Escuchar mensaje del SW cuando se activa nueva version
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data && event.data.type === 'SW_UPDATED') {
+        showUpdateBanner();
+      }
+    });
   });
 }
 
+function showUpdateBanner() {
+  // No mostrar si ya existe
+  if (document.getElementById('updateBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'updateBanner';
+  banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,#1e293b,#0f172a);border-top:2px solid #22d3ee;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;z-index:9999;gap:10px;';
+  banner.innerHTML = '<span style="color:#94a3b8;font-size:0.82rem;">🔄 Nueva versión disponible</span><button onclick="location.reload()" style="padding:8px 16px;background:#22d3ee;color:#0f172a;border:none;border-radius:8px;font-weight:700;font-size:0.8rem;cursor:pointer;">Actualizar</button>';
+  document.body.appendChild(banner);
+}
+
 // Auto-calculate on load with example 1
-window.addEventListener('load', ()=>{
+window.addEventListener('load', () => {
   loadDesignExample(1);
   setTimeout(calculateDesign, 300);
 });
