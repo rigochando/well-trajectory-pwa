@@ -202,14 +202,53 @@ select.form-input { cursor: pointer; }
 .plot-container { width: 100%; min-height: 300px; }
 .plot-container .js-plotly-plot { width: 100% !important; }
 
-/* === AD PLACEHOLDER === */
-.ad-slot {
-  background: rgba(30,41,59,0.5); border: 1px dashed var(--border);
-  border-radius: var(--radius); padding: 20px; text-align: center;
-  margin: 12px 0; min-height: 60px;
-  display: flex; align-items: center; justify-content: center;
+/* === PROMO BANNERS === */
+.promo {
+  display: block; text-decoration: none; border-radius: var(--radius);
+  margin: 14px 0; overflow: hidden; transition: transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
-.ad-slot span { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.promo:active { transform: scale(0.98); }
+
+.promo-curso {
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 50%, #1a3350 100%);
+  border: 1px solid #2e86c1; padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px;
+}
+.promo-curso .promo-icon { font-size: 2rem; flex-shrink: 0; }
+.promo-curso .promo-body { flex: 1; }
+.promo-curso .promo-tag {
+  display: inline-block; font-size: 0.55rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #0f172a; background: var(--accent-warn);
+  padding: 2px 8px; border-radius: 4px; margin-bottom: 4px;
+}
+.promo-curso .promo-title { font-size: 0.88rem; font-weight: 700; color: #f1f5f9; line-height: 1.3; }
+.promo-curso .promo-desc { font-size: 0.72rem; color: #94a3b8; margin-top: 2px; }
+.promo-curso .promo-cta {
+  flex-shrink: 0; padding: 8px 14px; border-radius: 8px;
+  background: var(--accent); color: #0f172a;
+  font-size: 0.72rem; font-weight: 700; white-space: nowrap;
+}
+
+.promo-afiliado {
+  background: linear-gradient(135deg, #1a2744 0%, #172033 100%);
+  border: 1px solid var(--border); padding: 12px 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.promo-afiliado .promo-icon { font-size: 1.6rem; flex-shrink: 0; }
+.promo-afiliado .promo-body { flex: 1; }
+.promo-afiliado .promo-tag {
+  display: inline-block; font-size: 0.55rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #0f172a; background: var(--accent3);
+  padding: 2px 8px; border-radius: 4px; margin-bottom: 4px;
+}
+.promo-afiliado .promo-title { font-size: 0.82rem; font-weight: 600; color: #f1f5f9; line-height: 1.3; }
+.promo-afiliado .promo-desc { font-size: 0.68rem; color: #94a3b8; margin-top: 2px; }
+.promo-afiliado .promo-cta {
+  flex-shrink: 0; padding: 7px 12px; border-radius: 8px;
+  background: var(--accent3); color: #0f172a;
+  font-size: 0.7rem; font-weight: 700; white-space: nowrap;
+}
 
 /* === ACCORDION === */
 .accordion-btn {
@@ -382,12 +421,7 @@ select.form-input { cursor: pointer; }
   <div id="d_error" class="error-msg" style="display:none;margin-top:12px;"></div>
 
   <!-- AD SLOT -->
-  <div class="ad-slot">
-    <!-- AdSense Ad Unit: Uncomment and replace SLOT_ID -->
-    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXX" data-ad-slot="SLOT_ID" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
-    <!-- <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script> -->
-    <span style="font-size:0.6rem;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">— Espacio Publicitario —</span>
-  </div>
+<div class="promo-slot" data-slot="1"></div>
 
   <!-- Results -->
   <div id="d_results" style="display:none;" class="fade-in">
@@ -420,12 +454,7 @@ select.form-input { cursor: pointer; }
     </div>
 
     <!-- AD SLOT -->
-    <div class="ad-slot">
-    <!-- AdSense Ad Unit: Uncomment and replace SLOT_ID -->
-    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXX" data-ad-slot="SLOT_ID" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
-    <!-- <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script> -->
-    <span style="font-size:0.6rem;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">— Espacio Publicitario —</span>
-  </div>
+  <div class="promo-slot" data-slot="2"></div>
   </div>
 </div>
 
@@ -465,12 +494,7 @@ select.form-input { cursor: pointer; }
   <div id="c_error" class="error-msg" style="display:none;"></div>
 
   <!-- AD SLOT -->
-  <div class="ad-slot">
-    <!-- AdSense Ad Unit: Uncomment and replace SLOT_ID -->
-    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXX" data-ad-slot="SLOT_ID" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
-    <!-- <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script> -->
-    <span style="font-size:0.6rem;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">— Espacio Publicitario —</span>
-  </div>
+<div class="promo-slot" data-slot="3"></div>
 
   <div id="c_results" style="display:none;" class="fade-in">
 
@@ -504,12 +528,7 @@ select.form-input { cursor: pointer; }
     </div>
 
     <!-- AD SLOT -->
-    <div class="ad-slot">
-    <!-- AdSense Ad Unit: Uncomment and replace SLOT_ID -->
-    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXX" data-ad-slot="SLOT_ID" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
-    <!-- <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script> -->
-    <span style="font-size:0.6rem;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">— Espacio Publicitario —</span>
-  </div>
+  <div class="promo-slot" data-slot="4"></div>
   </div>
 </div>
 
@@ -584,12 +603,7 @@ select.form-input { cursor: pointer; }
   </div>
 
   <!-- AD SLOT -->
-  <div class="ad-slot">
-    <!-- AdSense Ad Unit: Uncomment and replace SLOT_ID -->
-    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXX" data-ad-slot="SLOT_ID" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
-    <!-- <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script> -->
-    <span style="font-size:0.6rem;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;">— Espacio Publicitario —</span>
-  </div>
+<div class="promo-slot" data-slot="5"></div>
 </div>
 
 <!-- ============================= JAVASCRIPT ============================= -->
@@ -1204,7 +1218,108 @@ function showUpdateBanner() {
 window.addEventListener('load', () => {
   loadDesignExample(1);
   setTimeout(calculateDesign, 300);
+  renderPromos();
 });
+
+// =============================================================================
+// PROMO BANNER SYSTEM
+// =============================================================================
+// INSTRUCCIONES PARA ACTUALIZAR:
+// 1. Edita el array PROMOS de abajo
+// 2. Cada banner tiene: tipo, titulo, desc, cta, url, icono
+// 3. tipo: 'curso' (azul) o 'afiliado' (verde)
+// 4. Haz push y listo — los banners se actualizan para todos
+// =============================================================================
+
+const PROMOS = [
+  {
+    id: 'curso_diseno',
+    tipo: 'curso',
+    icono: '🎓',
+    tag: 'CURSO ONLINE',
+    titulo: 'Diseño de Perforación de Pozos Petroleros',
+    desc: 'Aprende diseño de trayectorias, survey, T&D y más. 9 módulos completos.',
+    cta: 'Ver Curso →',
+    url: 'https://rigoberto-s-site-63e1.thinkific.com/products/courses/course-landing-page'
+    // REEMPLAZA con tu URL real de Thinkific cuando publiques
+  },
+  {
+    id: 'curso_app',
+    tipo: 'curso',
+    icono: '📱',
+    tag: 'APRENDE MÁS',
+    titulo: '¿Te sirvió esta app? Lleva tu conocimiento al siguiente nivel',
+    desc: 'Domina los cálculos detrás de esta herramienta con ejemplos reales.',
+    cta: 'Más Info →',
+    url: 'https://rigoberto-s-site-63e1.thinkific.com/products/courses/course-landing-page'
+  },
+  {
+    id: 'afiliado_1',
+    tipo: 'afiliado',
+    icono: '📚',
+    tag: 'RECOMENDADO',
+    titulo: 'MANUAL DE PERFORACION DE POZOS PETROLIFEROS',
+    desc: 'Excelente referencia en español',
+    cta: 'Comprar →',
+    url: 'https://meli.la/1Ea7KUM'
+    // REEMPLAZA con tu enlace de afiliado de Mercado Libre/Amazon
+  },
+  {
+    id: 'afiliado_2',
+    tipo: 'afiliado',
+    icono: '🛠️',
+    tag: 'RECOMENDADO',
+    titulo: 'Paquetes De Libros Perforación Y Terminación De Pozos Torre',
+    desc: 'Excelente referencias en español',
+    cta: 'Ver Precio →',
+    url: 'https://meli.la/1v5aFXD'
+    // REEMPLAZA con tu enlace de afiliado
+  },
+  {
+    id: 'blog',
+    tipo: 'curso',
+    icono: '📝',
+    tag: 'BLOG',
+    titulo: 'Post técnicos sobre diversos temas de ingenieria petrolera',
+    desc: 'Contenido gratuito: DLS, minimum curvature, torque & drag.',
+    cta: 'Leer →',
+    url: 'https://rigobertochandomiblog.com'
+  }
+];
+
+// Asignacion de banners a cada slot (indices del array PROMOS)
+// Slot 1,3,5 = curso/blog | Slot 2,4 = afiliados
+const SLOT_MAP = {
+  1: [0, 1, 4],    // rota entre curso_diseno, curso_app, blog
+  2: [2, 3],        // rota entre afiliado_1, afiliado_2
+  3: [1, 0, 4],    // rota entre curso_app, curso_diseno, blog
+  4: [3, 2],        // rota entre afiliado_2, afiliado_1
+  5: [0, 4, 1]     // rota entre curso_diseno, blog, curso_app
+};
+
+function renderPromos() {
+  document.querySelectorAll('.promo-slot').forEach(slot => {
+    const slotNum = parseInt(slot.dataset.slot);
+    const candidates = SLOT_MAP[slotNum] || [0];
+    // Seleccionar banner aleatorio de los candidatos para este slot
+    const promoIdx = candidates[Math.floor(Math.random() * candidates.length)];
+    const p = PROMOS[promoIdx];
+    if (!p) return;
+
+    const cls = p.tipo === 'curso' ? 'promo-curso' : 'promo-afiliado';
+    slot.innerHTML = `
+      <a href="${p.url}" target="_blank" rel="noopener" class="promo ${cls}"
+         onclick="trackEvent('promo_click','${p.tipo}','${p.id}')">
+        <div class="promo-icon">${p.icono}</div>
+        <div class="promo-body">
+          <span class="promo-tag">${p.tag}</span>
+          <div class="promo-title">${p.titulo}</div>
+          <div class="promo-desc">${p.desc}</div>
+        </div>
+        <div class="promo-cta">${p.cta}</div>
+      </a>`;
+  });
+}
 </script>
 
 <!-- FOOTER -->

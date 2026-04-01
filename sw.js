@@ -8,7 +8,7 @@
 // 4. Los usuarios recibiran la actualizacion automaticamente
 // =============================================================================
 
-const APP_VERSION = '2.2';
+const APP_VERSION = '2.3';
 const CACHE_NAME = 'well-traj-v' + APP_VERSION;
 
 // Archivos locales de la app (rutas relativas para GitHub Pages)
